@@ -120,6 +120,8 @@ target/
 .settings/
 .classpath
 
+.idea/
+
 # deploy/trigger.sh output
 trigger.opts
 
