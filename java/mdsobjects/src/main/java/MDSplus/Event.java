@@ -1,14 +1,16 @@
 package MDSplus;
 
-public class Event
+import java.util.concurrent.atomic.AtomicBoolean;
+
+public class Event implements AutoCloseable
 {
-	long time = 0;
-	Data data = null;
-	byte[] dataBuf;
-	java.lang.String name;
-	boolean disposed = false;
-	boolean timeout;
-	long eventId;
+	private long time = 0;
+	private Data data = null;
+	private byte[] dataBuf;
+	private final java.lang.String name;
+	private final AtomicBoolean disposed = new AtomicBoolean(false);
+	private boolean timeout;
+	private final long eventId;
 	static
 	{
 		try
@@ -92,11 +94,18 @@ public class Event
 		}
 		catch (final InterruptedException exc)
 		{
+			Thread.currentThread().interrupt();
 			return null;
 		}
 		return getData();
 	}
 
+	/**
+	 * To be check 1. timeout is always true, so method always throw MdsException
+	 * <br/>
+	 * 2. What 'waitData()' for? a. Wait for 'milliseconds' then getData? b. getData
+	 * with Timeout?
+	 */
 	public synchronized Data waitData(int milliseconds) throws MdsException
 	{
 		timeout = true;
@@ -106,6 +115,7 @@ public class Event
 		}
 		catch (final InterruptedException exc)
 		{
+			Thread.currentThread().interrupt();
 			return null;
 		}
 		if (timeout)
@@ -115,10 +125,10 @@ public class Event
 
 	public void dispose()
 	{
-		if (disposed)
-			return;
-		disposed = true;
-		unregisterEvent(eventId);
+		if (disposed.compareAndSet(false, true))
+		{
+			unregisterEvent(eventId);
+		}
 	}
 
 	static public void setEvent(java.lang.String evName)
@@ -186,5 +196,11 @@ public class Event
 				System.out.println(exc);
 			}
 		}
+	}
+
+	@Override
+	public void close() throws Exception
+	{
+		dispose();
 	}
 }
