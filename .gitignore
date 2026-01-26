@@ -79,6 +79,7 @@ target/
 
 # intellij
 .idea/
+*.iml
 
 # vi
 *~
