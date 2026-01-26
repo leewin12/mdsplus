@@ -72,6 +72,7 @@ public class MdsConnectionTest
 	@Test
 	public void testData() throws MDSplus.MdsException
 	{
+		MDSplus.Connection c = null;
 		try
 		{
 			MDSplus.Tree tree = new MDSplus.Tree("java_test", -1, "NEW");
@@ -80,7 +81,6 @@ public class MdsConnectionTest
 			tree.close();
 			tree = new MDSplus.Tree("java_test", -1);
 			tree.createPulse(1);
-			MDSplus.Connection c = null;
 			System.out.println("connecting to localhost:" + port + " ... ");
 			for (int count = 0; count < 3; ++count)
 			{
@@ -129,6 +129,11 @@ public class MdsConnectionTest
 		{
 			exc.printStackTrace();
 			Assert.fail(exc.toString());
+		}
+		finally {
+			if (c != null) {
+				c.close();
+			}
 		}
 	}
 }

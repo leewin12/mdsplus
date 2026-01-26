@@ -2,9 +2,9 @@ package MDSplus;
 
 import java.util.*;
 
-public class Connection
+public class Connection implements AutoCloseable
 {
-	boolean isConnected = false;
+	protected volatile boolean isConnected = false;
 	static
 	{
 		try
@@ -71,9 +71,8 @@ public class Connection
 		isConnected = false;
 	}
 
-	// Deprecated in Java 9 to Java 22; will be removed in future Java.
 	@Override
-	protected void finalize()
+	public void close()
 	{
 		mdsdisconnect();
 	}
@@ -103,18 +102,18 @@ public class Connection
 		if (!checkArgs(args))
 			throw new MdsException(
 					"Invalid arguments: only scalars and arrays arguments can be passed to Connection.get()");
-                java.lang.String expandedExpr;
-                if(expr.equals("$"))
-                {
-                    expandedExpr = "serializeout(`("+expr+"))";
-                }
-                else
-                {
-                    expandedExpr = "serializeout(`(data(("+expr+"))))";
-                }
-                Data serData = get(sockId, expandedExpr, args);
-                return Data.deserialize(serData.getByteArray());
 
+		java.lang.String expandedExpr;
+		if (expr.equals("$"))
+		{
+			expandedExpr = "serializeout(`(" + expr + "))";
+		}
+		else
+		{
+			expandedExpr = "serializeout(`(data((" + expr + "))))";
+		}
+		Data serData = get(sockId, expandedExpr, args);
+		return Data.deserialize(serData.getByteArray());
 	}
 
 	public Data get(java.lang.String expr) throws MdsException
@@ -185,19 +184,20 @@ public class Connection
 	{
 		return new PutManyInConnection();
 	}
-       public static void main(java.lang.String args[])
-        {
-            try {
-            
-                MDSplus.Connection c = new MDSplus.Connection("localhost:8001");
-                c.openTree("test", -1);
-                System.out.println(c.get("anyapd"));
-            }catch(Exception exc)
-            {
-                System.out.println(exc);
-            }
-        }
- 
+
+	public static void main(java.lang.String args[])
+	{
+		try (MDSplus.Connection c = new MDSplus.Connection("localhost:8001");)
+		{
+			c.openTree("test", -1);
+			System.out.println(c.get("anyapd"));
+		}
+		catch (Exception exc)
+		{
+			System.out.println(exc);
+		}
+	}
+
 	////////// GetMany
 	class GetManyInConnection extends List implements GetMany
 	{
@@ -340,7 +340,7 @@ public class Connection
 				throw new MdsException(retMsg.getString());
 		}
 	}
-        
-        
+
+
 
 }
